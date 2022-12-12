@@ -1,0 +1,12 @@
+[package]
+name = "malek_dec12_LINES"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+stereokit = { path = "../stereokit-rs" }
+color-eyre = "0.6.2"
+glam={version = "0.22.0", features = ["mint"]}
+
