@@ -10,6 +10,7 @@ stereokit = { path = "../stereokit-rs" }
 color-eyre = "0.6.2"
 glam={version = "0.22.0", features = ["mint"]}
 stereokit-sys = {path = "../stereokit-sys"}
+seq-macro = "0.3.1"
 
 [[bin]]
 name = "2d_links"
