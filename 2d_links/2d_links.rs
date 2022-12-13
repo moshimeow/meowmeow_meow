@@ -51,7 +51,7 @@ impl Cosine for Jet<RESIDUAL_SIZE_DEFAULT> {
         };
 
         for i in 0..RESIDUAL_SIZE_DEFAULT {
-            s.grad[i] = -self.grad[i].cos()
+            s.grad[i] = -self.grad[i].sin()
         }
 
         s
