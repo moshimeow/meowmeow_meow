@@ -1,5 +1,6 @@
 use color_eyre::Result;
 use stereokit::{time::StereoKitTime, StereoKitSettings};
+// use stereokit_sys::
 
 fn swing_to_quaternion(swing_x: f32, swing_y: f32) -> glam::Quat {
     let mut ret = glam::Quat::default();
@@ -29,11 +30,12 @@ fn swing_to_quaternion(swing_x: f32, swing_y: f32) -> glam::Quat {
 }
 
 fn lines(sk: &stereokit::lifecycle::StereoKitDraw) {
+    
     let p = stereokit::pose::Pose::IDENTITY;
     let time = sk.time_getf();
 
-    let swing_x: f32 = (1.0 - time.sin()) * -0.7;
-    let swing_y: f32 = 0.0f32; //time.cos();
+    let swing_x: f32 = (1.0 - time.sin()) * -0.6;
+    let swing_y: f32 = time.cos() * 0.3f32; //time.cos();
 
     let mut last_quat = glam::Quat::IDENTITY;
     let mut last_pos = glam::Vec3::ZERO;
