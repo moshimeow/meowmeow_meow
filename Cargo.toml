@@ -9,4 +9,8 @@ edition = "2021"
 stereokit = { path = "../stereokit-rs" }
 color-eyre = "0.6.2"
 glam={version = "0.22.0", features = ["mint"]}
+stereokit-sys = {path = "../stereokit-sys"}
 
+[[bin]]
+name = "2d_links"
+path = "2d_links/2d_links.rs"

@@ -502,6 +502,7 @@ dependencies = [
  "color-eyre",
  "glam",
  "stereokit",
+ "stereokit-sys",
 ]
 
 [[package]]
