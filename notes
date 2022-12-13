@@ -1,0 +1,4 @@
+1. levenberg-marquardt crate is probably not useful since it implements its own QR decomposition (????)
+2. It looks like we can "use" it for now and see if it works at all even though it's slow
+3. maybe we could upstream actual good matrix solvers in there
+4. meow
