@@ -2,11 +2,18 @@ use color_eyre::Result;
 use seq_macro::seq;
 use std::fmt::{Debug, Formatter};
 use std::ops::{Add, AddAssign, Sub, SubAssign};
+use levenberg_marquardt::LeastSquaresProblem;
 use stereokit::{time::StereoKitTime, StereoKitSettings};
 
 const NUM_LINKS: usize = 2;
 const NUM_RESIDUALS: usize = NUM_LINKS * 2;
 const GRADIENT_SIZE: usize = NUM_LINKS;
+
+// Bad!!!!!
+// This is because we are going to need to make some big macro that
+// instantiates all our LM stuff for various gradient sizes and residual numbers.
+// Nova keeps saying const functions might be able to do this
+type OurJacobian = nalgebra::Matrix<f32, GRADIENT_SIZE, NUM_RESIDUALS>;
 
 #[derive(Clone, Copy, Debug)]
 struct Jet<const N: usize> {
@@ -137,14 +144,64 @@ trait CostFunctor {
 	);
 }
 
-// trait AutodiffJacobianCalculation {
-// 	fn calculate_jacobian(
-// 		&mut self,
-// 		parameters: &[f32; NUM_LINKS],
-// 		residuals: &mut [f32; NUM_RESIDUALS],
-// 		jacobian: Option<&mut [[f32; GRADIENT_SIZE]; NUM_RESIDUALS]>,
-// 	);
-// }
+fn calc_func_and_jacobian<T: CostFunctor>(
+	thing: &mut T,
+	parameters: &[f32; NUM_LINKS],
+	residuals: &mut [f32; NUM_RESIDUALS],
+	jacobian: Option<&mut [[f32; GRADIENT_SIZE]; NUM_RESIDUALS]>,
+) {
+	let Some(jacobian) = jacobian else {
+    thing.calculate_residual(parameters, residuals);
+    return;
+  };
+
+	let mut input_parameters: [Jet<GRADIENT_SIZE>; NUM_LINKS] = Default::default();
+	// Initialize the jets. Note, this assumes that Default::default() correctly zeroes everything out.
+	// todo Implement Zero in MeowScalar trait
+	for i in 0..GRADIENT_SIZE {
+		input_parameters[i].val = parameters[i];
+		input_parameters[i].grad[i] = 1.0f32;
+	}
+
+	let mut output_residuals: [Jet<GRADIENT_SIZE>; NUM_RESIDUALS] = Default::default();
+
+	thing.calculate_residual(&input_parameters, &mut output_residuals);
+
+	// todo I have no idea if this is right, we probably want a ndarray output type
+	for r in 0..NUM_RESIDUALS {
+		for g in 0..GRADIENT_SIZE {
+			jacobian[r][g] = output_residuals[r].grad[g];
+		}
+	}
+}
+
+struct AutodiffProblem<T: CostFunctor> {
+  state: T,
+
+
+}
+
+impl<T: CostFunctor> LeastSquaresProblem<f32, Const<GRADIENT_SIZE>, Const<NUM_RESIDUALS>> for AutodiffProblem<T> {
+  type ResidualStorage = ();
+  type JacobianStorage = ();
+  type ParameterStorage = ();
+
+  fn set_params(&mut self, x: &nalgebra::base::matrix::Vector<f32, Const<NUM_RESIDUALS>, Self::ParameterStorage>) {
+    todo!()
+  }
+
+  fn params(&self) -> nalgebra::base::matrix::Vector<f32, Const<NUM_RESIDUALS>, Self::ParameterStorage> {
+    todo!()
+  }
+
+  fn residuals(&self) -> Option<nalgebra::base::matrix::Vector<f32, Const<GRADIENT_SIZE>, Self::ResidualStorage>> {
+    todo!()
+  }
+
+  fn jacobian(&self) -> Option<nalgebra::base::matrix::Matrix<f32, Const<GRADIENT_SIZE>, Const<NUM_RESIDUALS>, Self::JacobianStorage>> {
+    todo!()
+  }
+}
 
 struct pgm_state {
 	gt_angles: [f32; NUM_LINKS],
@@ -195,37 +252,6 @@ impl CostFunctor for pgm_state {
 			out_idx += 1;
 		}
 	}
-}
-
-fn calc_func_and_jacobian<T: CostFunctor>(
-  thing: &mut T,
-	parameters: &[f32; NUM_LINKS],
-	residuals: &mut [f32; NUM_RESIDUALS],
-	jacobian: Option<&mut [[f32; GRADIENT_SIZE]; NUM_RESIDUALS]>,
-) {
-  if let Some(jacobian) = jacobian {
-    let mut input_parameters: [Jet<GRADIENT_SIZE>; NUM_LINKS] = Default::default();
-    // Initialize the jets. Note, this assumes that Default::default() correctly zeroes everything out.
-    //!@todo Implement Zero in MeowScalar trait
-    for i in 0..GRADIENT_SIZE {
-      input_parameters[i].val = parameters[i];
-      input_parameters[i].grad[i] = 1.0f32;
-    }
-
-    let mut output_residuals: [Jet<GRADIENT_SIZE>; NUM_RESIDUALS] = Default::default();
-
-    thing.calculate_residual(&input_parameters, &mut output_residuals);
-
-    //!@todo I have no idea if this is right, we probably want a ndarray output type
-    for r in i..NUM_RESIDUALS {
-      for g in i..GRADIENT_SIZE {
-        jacobian[r][g] = output_residuals[r].grad[g];
-      }
-    }
-  } else {
-    thing.calculate_residual(parameters, residuals);
-    return;
-  }
 }
 
 fn main() -> Result<()> {

@@ -11,6 +11,7 @@ color-eyre = "0.6.2"
 glam={version = "0.22.0", features = ["mint"]}
 stereokit-sys = {path = "../stereokit-sys"}
 seq-macro = "0.3.1"
+levenberg-marquardt = "0.12.0"
 
 [[bin]]
 name = "2d_links"
