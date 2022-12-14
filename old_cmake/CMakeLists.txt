@@ -36,7 +36,10 @@ find_package(StereoKitC REQUIRED)
 
 
 
-
+add_library(xrt-external-tinyceres INTERFACE)
+target_include_directories(
+	xrt-external-tinyceres SYSTEM INTERFACE src/tinyceres/include
+	)
 
 
 add_executable(helloworld src/hworld.cpp)
