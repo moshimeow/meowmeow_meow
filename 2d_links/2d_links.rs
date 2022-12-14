@@ -13,7 +13,7 @@ const GRADIENT_SIZE: usize = NUM_LINKS;
 // This is because we are going to need to make some big macro that
 // instantiates all our LM stuff for various gradient sizes and residual numbers.
 // Nova keeps saying const functions might be able to do this
-type OurJacobian = nalgebra::Matrix<f32, GRADIENT_SIZE, NUM_RESIDUALS>;
+// type OurJacobian = nalgebra::Matrix<f32, GRADIENT_SIZE, NUM_RESIDUALS>;
 
 #[derive(Clone, Copy, Debug)]
 struct Jet<const N: usize> {
@@ -175,33 +175,33 @@ fn calc_func_and_jacobian<T: CostFunctor>(
 	}
 }
 
-struct AutodiffProblem<T: CostFunctor> {
-  state: T,
-
-
-}
-
-impl<T: CostFunctor> LeastSquaresProblem<f32, Const<GRADIENT_SIZE>, Const<NUM_RESIDUALS>> for AutodiffProblem<T> {
-  type ResidualStorage = ();
-  type JacobianStorage = ();
-  type ParameterStorage = ();
-
-  fn set_params(&mut self, x: &nalgebra::base::matrix::Vector<f32, Const<NUM_RESIDUALS>, Self::ParameterStorage>) {
-    todo!()
-  }
-
-  fn params(&self) -> nalgebra::base::matrix::Vector<f32, Const<NUM_RESIDUALS>, Self::ParameterStorage> {
-    todo!()
-  }
-
-  fn residuals(&self) -> Option<nalgebra::base::matrix::Vector<f32, Const<GRADIENT_SIZE>, Self::ResidualStorage>> {
-    todo!()
-  }
-
-  fn jacobian(&self) -> Option<nalgebra::base::matrix::Matrix<f32, Const<GRADIENT_SIZE>, Const<NUM_RESIDUALS>, Self::JacobianStorage>> {
-    todo!()
-  }
-}
+// struct AutodiffProblem<T: CostFunctor> {
+//   state: T,
+//
+//
+// }
+//
+// impl<T: CostFunctor> LeastSquaresProblem<f32, Const<GRADIENT_SIZE>, Const<NUM_RESIDUALS>> for AutodiffProblem<T> {
+//   type ResidualStorage = ();
+//   type JacobianStorage = ();
+//   type ParameterStorage = ();
+//
+//   fn set_params(&mut self, x: &nalgebra::base::matrix::Vector<f32, Const<NUM_RESIDUALS>, Self::ParameterStorage>) {
+//     todo!()
+//   }
+//
+//   fn params(&self) -> nalgebra::base::matrix::Vector<f32, Const<NUM_RESIDUALS>, Self::ParameterStorage> {
+//     todo!()
+//   }
+//
+//   fn residuals(&self) -> Option<nalgebra::base::matrix::Vector<f32, Const<GRADIENT_SIZE>, Self::ResidualStorage>> {
+//     todo!()
+//   }
+//
+//   fn jacobian(&self) -> Option<nalgebra::base::matrix::Matrix<f32, Const<GRADIENT_SIZE>, Const<NUM_RESIDUALS>, Self::JacobianStorage>> {
+//     todo!()
+//   }
+// }
 
 struct pgm_state {
 	gt_angles: [f32; NUM_LINKS],
