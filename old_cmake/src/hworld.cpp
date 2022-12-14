@@ -13,14 +13,17 @@ using namespace sk;
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
-#include "ceres/ceres.h"
-#include "glog/logging.h"
+// #include "ceres/ceres.h"
+// #include "glog/logging.h"
 
-using ceres::AutoDiffCostFunction;
-using ceres::CostFunction;
-using ceres::Problem;
-using ceres::Solve;
-using ceres::Solver;
+#include "tinyceres/include/tinyceres/tiny_solver.hpp"
+#include "tinyceres/include/tinyceres/tiny_solver_autodiff_function.hpp"
+
+// using ceres::AutoDiffCostFunction;
+// using ceres::CostFunction;
+// using ceres::Problem;
+// using ceres::Solve;
+// using ceres::Solver;
 
 // A templated cost functor that implements the residual r = 10 -
 // x. The method operator() is templated so that we can then use an
@@ -34,6 +37,9 @@ using ceres::Solver;
 // }
 
 #define num_links 2
+
+
+using magicmatrix = Eigen::Matrix<float, num_links, 1>;
 
 template <typename T>
 void
@@ -55,11 +61,11 @@ eval_chain(const T in[num_links], T out_pts[num_links][2])
 }
 
 void
-eval_chain_simple(double angles[num_links], Eigen::Vector2d out[num_links])
+eval_chain_simple(magicmatrix angles, Eigen::Vector2f out[num_links])
 {
 	// Paranoia.
-	double out_pts[num_links][2];
-	eval_chain<double>(angles, out_pts);
+	float out_pts[num_links][2];
+	eval_chain<float>(angles.data(), out_pts);
 	for (int i = 0; i < num_links; i++) {
 		out[i].x() = out_pts[i][0];
 		out[i].y() = out_pts[i][1];
@@ -70,26 +76,24 @@ struct pgm_state;
 
 struct CostFunctor
 {
-	pgm_state *state;
+	pgm_state &state;
 
 	template <typename T>
 	bool
 	operator()(const T *const x, T *residual) const;
 
-	CostFunctor(pgm_state *in_state)
-	{
-		this->state = in_state;
-	}
+	CostFunctor(pgm_state &in_state) : state(in_state) {}
 };
 
 
 struct pgm_state
 {
-	double gt_angles[num_links] = {};
-	Eigen::Vector2d gt_positions[num_links] = {};
+	magicmatrix gt_angles = {};
+	Eigen::Vector2f gt_positions[num_links] = {};
 
-	double recovered_angles[num_links];
-	Eigen::Vector2d recovered_positions[num_links];
+	// float recovered_angles[num_links];
+	Eigen::Matrix<float, num_links, 1> recovered_angles;
+	Eigen::Vector2f recovered_positions[num_links];
 };
 
 
@@ -106,19 +110,19 @@ CostFunctor::operator()(const T *const x, T *residual) const
 
 	eval_chain(x, out_pts);
 
-  std::cout << std::endl;
-
-  for (int i = 0; i < num_links; i++) {
-    for (int j = 0; j < 2; j++) {
-      std::cout << out_pts[i][j] << std::endl;
-    }
-  }
-  std::cout << std::endl;
-  std::cout << std::endl;
+	std::cout << std::endl;
 
 	for (int i = 0; i < num_links; i++) {
-		residual[(i * 2) + 0] = out_pts[i][0] - this->state->gt_positions[i].x();
-		residual[(i * 2) + 1] = out_pts[i][1] - this->state->gt_positions[i].y();
+		for (int j = 0; j < 2; j++) {
+			std::cout << out_pts[i][j] << std::endl;
+		}
+	}
+	std::cout << std::endl;
+	std::cout << std::endl;
+
+	for (int i = 0; i < num_links; i++) {
+		residual[(i * 2) + 0] = out_pts[i][0] - this->state.gt_positions[i].x();
+		residual[(i * 2) + 1] = out_pts[i][1] - this->state.gt_positions[i].y();
 	}
 
 
@@ -127,72 +131,23 @@ CostFunctor::operator()(const T *const x, T *residual) const
 
 
 
-double
+float
 do_it(pgm_state &state)
 {
-	// google::InitGoogleLogging(argv[0]);
 
-	// The variable to solve for with its initial value. It will be
-	// mutated in place by the solver.
-	// double x[num_links];
-	// for ()
-	// x[0] = state.recovered_angles[0];
-	// x[1] = state.recovered_angles[1];
+	CostFunctor cf(state);
 
-	// Build the problem.
-	Problem problem;
+	using AutoDiffCostFunctor =
+	    ceres::TinySolverAutoDiffFunction<CostFunctor, num_links * 2, num_links, float>;
 
-	// Set up the only cost function (also known as residual). This uses
-	// auto-differentiation to obtain the derivative (jacobian).
-#if 0
-	CostFunction *cost_function =
-	    new ceres::NumericDiffCostFunction<CostFunctor, ceres::CENTRAL, num_links * 2, num_links>(new CostFunctor(&state));
-#else
-	CostFunction *cost_function =
-	    new AutoDiffCostFunction<CostFunctor, num_links * 2, num_links>(new CostFunctor(&state));
-#endif
+	AutoDiffCostFunctor f(cf);
+	ceres::TinySolver<AutoDiffCostFunctor> solver = {};
+
+	// Set initial state, for kicks.
 	for (int i = 0; i < num_links; i++) {
-		state.recovered_angles[i] = -1.2;
+		state.recovered_angles[0] = -1.2;
 	}
-
-	problem.AddResidualBlock(cost_function, nullptr, state.recovered_angles);
-
-	// Run the solver!
-	Solver::Options options;
-	// options.use_nonmonotonic_steps = true;
-	// options.minimizer_type = ceres::LINE_SEARCH;
-	options.max_num_iterations = 1000;
-
-	// options.trust_region_strategy_type = ceres::DOGLEG;
-
-	// options.num_threads = 10;
-	options.gradient_tolerance = 1e-10;
-	options.linear_solver_type = ceres::DENSE_QR;
-	// options.linear_solver_type = ceres::SPARSE_SCHUR;
-	// options.
-	// options.
-	// options.minimizer_progress_to_stdout = true;
-	Solver::Summary summary;
-
-	// uint64_t start = os_monotonic_get_ns();
-	Solve(options, &problem, &summary);
-	// uint64_t end = os_monotonic_get_ns();
-
-	// uint64_t diff = end - start;
-	// double time_taken = (double)diff / (double)U_TIME_1MS_IN_NS;
-	// U_LOG_E("Took %f ms", time_taken);
-
-	// state.recovered_angles[0] = x[0];
-	// state.recovered_angles[1] = x[1];
-
-	// // std::cout << summary.BriefReport() << "\n";
-	std::cout << summary.FullReport() << "\n";
-	// std::cout << "x : "
-	//           << " -> " << x[0] << "\n";
-	// std::cout << "x : "
-	//           << " -> " << x[1] << "\n";
-
-
+	solver.Solve(f, &state.recovered_angles);
 	eval_chain_simple(state.recovered_angles, state.recovered_positions);
 	return 0;
 }

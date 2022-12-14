@@ -43,7 +43,7 @@ target_include_directories(
 
 
 add_executable(helloworld src/hworld.cpp)
-target_link_libraries(helloworld PRIVATE StereoKitC::StereoKitC Ceres::ceres) # aux_os aux_util)
+target_link_libraries(helloworld PRIVATE StereoKitC::StereoKitC xrt-external-tinyceres) # aux_os aux_util)
 
 set_property(TARGET helloworld PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
 
