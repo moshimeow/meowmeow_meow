@@ -51,90 +51,79 @@ impl MeowScalar for f32 {
 	}
 }
 
-macro_rules! jet {
-	($num:expr) => {
-		impl std::ops::AddAssign for Jet<$num> {
-			fn add_assign(&mut self, rhs: Self) {
-				self.val += rhs.val;
-				for i in 0..$num {
-					self.grad[i] += rhs.grad[i];
-				}
-			}
+impl<const N: usize> std::ops::AddAssign for Jet<N> {
+	fn add_assign(&mut self, rhs: Self) {
+		self.val += rhs.val;
+		for i in 0..N {
+			self.grad[i] += rhs.grad[i]
 		}
-
-		impl std::ops::SubAssign for Jet<$num> {
-			fn sub_assign(&mut self, rhs: Self) {
-				self.val -= rhs.val;
-				for i in 0..$num {
-					self.grad[i] -= rhs.grad[i];
-				}
-			}
-		}
-
-		impl std::ops::Add for Jet<$num> {
-			type Output = Self;
-
-			fn add(self, rhs: Self) -> Self {
-				let mut s: Jet<$num> = Default::default();
-				s.val = self.val + rhs.val;
-				for i in 0..$num {
-					s.grad[i] = self.grad[i] + rhs.grad[i];
-				}
-				return s;
-			}
-		}
-
-		impl std::ops::Sub for Jet<$num> {
-			type Output = Self;
-
-			fn sub(self, rhs: Self) -> Self::Output {
-				let mut s: Jet<$num> = Default::default();
-				s.val = self.val - rhs.val;
-				for i in 0..$num {
-					s.grad[i] = self.grad[i] - rhs.grad[i];
-				}
-				return s;
-			}
-		}
-
-		impl MeowScalar for Jet<$num> {
-			fn new(val: f32) -> Self {
-				Jet {
-					val,
-					grad: Default::default(),
-				}
-			}
-
-			fn sin(self) -> Self {
-				let mut s: Jet<$num> = Default::default();
-				s.val = self.val.sin();
-
-				for i in 0..$num {
-					s.grad[i] = self.val.cos() * self.grad[i];
-				}
-				return s;
-			}
-
-			fn cos(self) -> Self {
-				let mut s: Jet<$num> = Default::default();
-				s.val = self.val.cos();
-
-				for i in 0..$num {
-					s.grad[i] = -self.val.sin() * self.grad[i];
-				}
-				return s;
-			}
-		}
-
-		impl Default for Jet<$num> {
-			fn default() -> Self {
-				Self::new(0.0)
-			}
-		}
-	};
+	}
 }
+impl<const N: usize> std::ops::SubAssign for Jet<N> {
+	fn sub_assign(&mut self, rhs: Self) {
+		self.val -= rhs.val;
+		for i in 0..N {
+			self.grad[i] -= rhs.grad[i];
+		}
+	}
+}
+impl<const N: usize> std::ops::Add for Jet<N> {
+	type Output = Self;
 
-jet!({ GRADIENT_SIZE });
+	fn add(self, rhs: Self) -> Self::Output {
+		let mut s = Self::default();
+		s.val = self.val + rhs.val;
+		for i in 0..N {
+			s.grad[i] = self.grad[i] + rhs.grad[i];
+		}
+		return s;
+	}
+}
+impl<const N: usize> std::ops::Sub for Jet<N> {
+	type Output = Self;
+
+	fn sub(self, rhs: Self) -> Self::Output {
+		let mut s = Self::default();
+		s.val = self.val - rhs.val;
+		for i in 0..N {
+			s.grad[i] = self.grad[i] - rhs.grad[i];
+		}
+		return s;
+	}
+}
+impl<const N: usize> Default for Jet<N> {
+	fn default() -> Self {
+		Self::new(0.0)
+	}
+}
+impl<const N: usize> MeowScalar for Jet<N> {
+	fn new(val: f32) -> Self {
+		Jet {
+			val,
+			grad: [0.0; N],
+		}
+	}
+
+	fn sin(self) -> Self {
+		let mut s = Self::default();
+		s.val = self.val.sin();
+
+		for i in 0..N {
+			s.grad[i] = self.val.cos() * self.grad[i];
+		}
+		return s;
+	}
+
+	fn cos(self) -> Self {
+		let mut s = Self::default();
+		s.val = self.val.cos();
+
+		for i in 0..N {
+			s.grad[i] = -self.val.sin() * self.grad[i];
+		}
+		return s;
+	}
+}
 
 trait CostFunctor {
 	fn calculate_residual<T: MeowScalar>(
