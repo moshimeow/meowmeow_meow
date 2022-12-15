@@ -133,7 +133,7 @@ class TinySolverAutoDiffFunction {
     if (jacobian == nullptr) {
       // No jacobian requested, so just directly call the cost function with
       // doubles, skipping jets and derivatives.
-      return cost_functor_(parameters, residuals);
+      return this->cost_functor_(parameters, residuals);
     }
     // Initialize the input jets with passed parameters.
     for (int i = 0; i < kNumParameters; ++i) {
@@ -143,20 +143,20 @@ class TinySolverAutoDiffFunction {
     }
 
     // Initialize the output jets such that we can detect user errors.
-    for (int i = 0; i < num_residuals_; ++i) {
+    for (int i = 0; i < this->num_residuals_; ++i) {
       jet_residuals_[i].a = kImpossibleValue;
       jet_residuals_[i].v.setConstant(kImpossibleValue);
     }
 
     // Execute the cost function, but with jets to find the derivative.
-    if (!cost_functor_(jet_parameters_, jet_residuals_.data())) {
+    if (!this->cost_functor_(jet_parameters_, jet_residuals_.data())) {
       return false;
     }
 
     // Copy the jacobian out of the derivative part of the residual jets.
     Eigen::Map<Eigen::Matrix<T, kNumResiduals, kNumParameters>> jacobian_matrix(
-        jacobian, num_residuals_, kNumParameters);
-    for (int r = 0; r < num_residuals_; ++r) {
+        jacobian, this->num_residuals_, kNumParameters);
+    for (int r = 0; r < this->num_residuals_; ++r) {
       residuals[r] = jet_residuals_[r].a;
       // Note that while this looks like a fast vectorized write, in practice it
       // unfortunately thrashes the cache since the writes to the column-major
@@ -167,7 +167,7 @@ class TinySolverAutoDiffFunction {
   }
 
   int NumResiduals() const {
-    return num_residuals_;  // Set by Initialize.
+    return this->num_residuals_;  // Set by Initialize.
   }
 
  private:
@@ -193,14 +193,14 @@ class TinySolverAutoDiffFunction {
   typename std::enable_if<(R == Eigen::Dynamic), void>::type Initialize(
       const CostFunctor& function) {
     jet_residuals_.resize(function.NumResiduals());
-    num_residuals_ = function.NumResiduals();
+    this->num_residuals_ = function.NumResiduals();
   }
 
   // The number of parameters and residuals are statically sized.
   template <int R>
   typename std::enable_if<(R != Eigen::Dynamic), void>::type Initialize(
       const CostFunctor& /* function */) {
-    num_residuals_ = kNumResiduals;
+    this->num_residuals_ = kNumResiduals;
   }
 };
 

@@ -56,6 +56,7 @@
 #include <cmath>
 
 #include "Eigen/Dense"
+#include "log.hpp"
 
 namespace ceres {
 
@@ -189,6 +190,7 @@ class TinySolver {
   };
 
   bool Update(const Function& function, const Parameters& x) {
+    MEOW_LOG("Hi!");
     if (!function(x.data(), residuals_.data(), jacobian_.data())) {
       return false;
     }
