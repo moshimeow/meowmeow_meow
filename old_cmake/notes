@@ -1,0 +1,5 @@
+jacobi_scaling:
+1D column vector. num rows is num_inputs, num cols is 1
+
+what's g_? It's also a 1D column vector of length num_inputs, but what is it? "gradient"? unsure
+from `		summary.gradient_max_norm = g_.array().abs().maxCoeff();` gradient is indicated, hmm
