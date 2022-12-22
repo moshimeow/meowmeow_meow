@@ -15,14 +15,31 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(NOT MSVC)
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pedantic -Wall -Wextra -Wno-unused-parameter -Werror=incompatible-pointer-types")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-unused-parameter")
+	set(CMAKE_BUILD_TYPE DEBUG)
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g3 -O0 -fno-omit-frame-pointer -pedantic -Wall -Wextra -Wno-unused-parameter -Werror=incompatible-pointer-types")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O0 -fno-omit-frame-pointer -Wall -Wextra -Wno-unused-parameter")
 	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
 	set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,--no-undefined")
 endif()
 
+# cmake .. 
+#-DCMAKE_BUILD_TYPE=Debug -GNinja -DCMAKE_C_FLAGS="-g3 -O0 -fno-omit-frame-pointer" 
+#-DCMAKE_CXX_FLAGS="-g3 -O0 -fno-omit-frame-pointer"
+
 # Default to PIC code
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# Make sure we have pretty colours
+option(DISABLE_COLORED_OUTPUT "Always produce ANSI-colored output (GNU/Clang only)." OFF)
+
+if(NOT DISABLE_COLORED_OUTPUT)
+	if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+		add_compile_options(-fdiagnostics-color=always)
+	elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+		add_compile_options(-fcolor-diagnostics)
+	endif()
+endif()
 
 find_package(Ceres REQUIRED)
 
