@@ -41,6 +41,7 @@
 
 #include "Eigen/Core"
 #include "tinyceres/jet.hpp"
+#include "tinyceres/log.hpp"
 
 //!@todo Really?
 const double kImpossibleValue = 1e302;
@@ -134,12 +135,14 @@ class TinySolverAutoDiffFunction {
       // No jacobian requested, so just directly call the cost function with
       // doubles, skipping jets and derivatives.
       return this->cost_functor_(parameters, residuals);
+      MEOW_LOG_FN("Called without jacobian!");
     }
+    MEOW_LOG_FN("Called with jacobian!");
     // Initialize the input jets with passed parameters.
     for (int i = 0; i < kNumParameters; ++i) {
-      jet_parameters_[i].a = parameters[i];  // Scalar part.
-      jet_parameters_[i].v.setZero();        // Derivative part.
-      jet_parameters_[i].v[i] = T(1.0);
+      this->jet_parameters_[i].a = parameters[i];  // Scalar part.
+      this->jet_parameters_[i].v.setZero();        // Derivative part.
+      this->jet_parameters_[i].v[i] = T(1.0);
     }
 
     // Initialize the output jets such that we can detect user errors.
@@ -149,7 +152,7 @@ class TinySolverAutoDiffFunction {
     }
 
     // Execute the cost function, but with jets to find the derivative.
-    if (!this->cost_functor_(jet_parameters_, jet_residuals_.data())) {
+    if (!this->cost_functor_(this->jet_parameters_, jet_residuals_.data())) {
       return false;
     }
 

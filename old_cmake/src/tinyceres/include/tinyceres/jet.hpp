@@ -178,13 +178,6 @@
 #define COLOR_ERROR "\033[31m"
 #define COLOR_RESET "\033[0m"
 
-#define MEOW_LOG(...)                                                                                                  \
-	do {                                                                                                           \
-		printf("%sm %s", COLOR_ERROR, COLOR_RESET);                                                            \
-		printf(__VA_ARGS__);                                                                                   \
-		printf("\n");                                                                                          \
-	} while (false)
-
 // Here we provide partial specializations of std::common_type for the Jet class
 // to allow determining a Jet type with a common underlying arithmetic type.
 // Such an arithmetic type can be either a scalar or an another Jet. An example

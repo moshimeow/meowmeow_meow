@@ -1,11 +1,3 @@
-// A simple example of using the Ceres minimizer.
-//
-// Minimize 0.5 (10 - x)^2 using jacobian matrix computed using
-// automatic differentiation.
-
-// #include "os/os_time.h"
-// #include "util/u_logging.h"
-
 #include "stereokit.h"
 #include "stereokit_ui.h"
 using namespace sk;
@@ -13,30 +5,11 @@ using namespace sk;
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
-// #include "ceres/ceres.h"
-// #include "glog/logging.h"
-
 #include "tinyceres/include/tinyceres/tiny_solver.hpp"
 #include "tinyceres/include/tinyceres/tiny_solver_autodiff_function.hpp"
 
-// using ceres::AutoDiffCostFunction;
-// using ceres::CostFunction;
-// using ceres::Problem;
-// using ceres::Solve;
-// using ceres::Solver;
 
-// A templated cost functor that implements the residual r = 10 -
-// x. The method operator() is templated so that we can then use an
-// automatic differentiation wrapper around it to generate its
-// derivatives.
-
-
-// template <typename T> struct Affine2
-// {
-
-// }
-
-#define num_links 2
+#define num_links 8
 
 
 using magicmatrix = Eigen::Matrix<float, num_links, 1>;
@@ -102,23 +75,23 @@ bool
 CostFunctor::operator()(const T *const x, T *residual) const
 {
 
-	for (int i = 0; i < num_links; i++) {
-		std::cout << x[i] << std::endl;
-	}
-
 	T out_pts[num_links][2];
 
 	eval_chain(x, out_pts);
 
-	std::cout << std::endl;
 
+#if 0
+	MEOW_LOG("input:");
+	for (int i = 0; i < num_links; i++) {
+		std::cout << x[i] << std::endl;
+	}
+	MEOW_LOG("output:");
 	for (int i = 0; i < num_links; i++) {
 		for (int j = 0; j < 2; j++) {
 			std::cout << out_pts[i][j] << std::endl;
 		}
 	}
-	std::cout << std::endl;
-	std::cout << std::endl;
+#endif
 
 	for (int i = 0; i < num_links; i++) {
 		residual[(i * 2) + 0] = out_pts[i][0] - this->state.gt_positions[i].x();
@@ -137,8 +110,7 @@ do_it(pgm_state &state)
 
 	CostFunctor cf(state);
 
-	using AutoDiffCostFunctor =
-	    ceres::TinySolverAutoDiffFunction<CostFunctor, num_links * 2, num_links, float>;
+	using AutoDiffCostFunctor = ceres::TinySolverAutoDiffFunction<CostFunctor, num_links * 2, num_links, float>;
 
 	AutoDiffCostFunctor f(cf);
 	ceres::TinySolver<AutoDiffCostFunctor> solver = {};
@@ -202,9 +174,6 @@ step(void *ptr)
 	}
 
 
-
-	// std::cout << state.secret_positions[1] << std::endl;
-	// std::cout << state.secret_positions[0] << std::endl;
 
 	{
 		pose_t p_last = sk::pose_identity;
