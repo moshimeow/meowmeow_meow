@@ -3,3 +3,49 @@ jacobi_scaling:
 
 what's g_? It's also a 1D column vector of length num_inputs, but what is it? "gradient"? unsure
 from `		summary.gradient_max_norm = g_.array().abs().maxCoeff();` gradient is indicated, hmm
+
+
+
+
+
+
+https://en.wikipedia.org/wiki/Cholesky_decomposition
+
+
+
+OK after reading LMA wikipedia article again: I have discovered, the place we're trying to jump to is one where the *gradient* is 0
+This sort of explains why they kept saying something about quadratic surfaces (but wait where was that again/)
+
+Thing two: 
+"The sum of square deviations has a minimum at a zero gradient with respect to (parameter vector)"
+Soooooo
+I think this is taking a linear model of where we are, looking for a spot on our hyperplane closest to the empirical points?
+
+
+Anyway we're definitely solving for (jtj)dx = jt(y-f(parameters)) (where y is our vector of observations)
+so
+A is jtj
+x is dx
+B = jt(y-f(parameters))
+Why is this true? Not quite sure.y
+
+
+
+
+
+============
+
+RUST LIBS
+https://docs.rs/ndarray-linalg/0.12.0/ndarray_linalg/index.html
+IS A LINALG LIB FOR 
+https://github.com/rust-ndarray/ndarray
+
+
+https://docs.rs/nalgebra/latest/nalgebra/
+SEEMS TO BE DIFFERENT FROM NDARRAY
+
+https://docs.rs/levenberg-marquardt/latest/levenberg_marquardt/ uses nalgebra, not (?) ndarray
+
+nalgebra _does_ have cholesky decomp: https://www.nalgebra.org/docs/user_guide/decompositions_and_lapack/#cholesky-decomposition
+
+question for lek: what do we think the differences between `ndarray` (along with `ndarray_linalg`) and `nalgebra` are?
