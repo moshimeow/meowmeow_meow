@@ -9,7 +9,7 @@ using namespace sk;
 #include "tinyceres/include/tinyceres/tiny_solver_autodiff_function.hpp"
 
 
-#define num_links 8
+#define num_links 2
 
 
 using magicmatrix = Eigen::Matrix<float, num_links, 1>;
@@ -80,7 +80,7 @@ CostFunctor::operator()(const T *const x, T *residual) const
 	eval_chain(x, out_pts);
 
 
-#if 0
+#if 1
 	MEOW_LOG("input:");
 	for (int i = 0; i < num_links; i++) {
 		std::cout << x[i] << std::endl;
@@ -117,7 +117,7 @@ do_it(pgm_state &state)
 
 	// Set initial state, for kicks.
 	for (int i = 0; i < num_links; i++) {
-		state.recovered_angles[0] = -1.2;
+		state.recovered_angles[i] = -1.2;
 	}
 	solver.Solve(f, &state.recovered_angles);
 	eval_chain_simple(state.recovered_angles, state.recovered_positions);

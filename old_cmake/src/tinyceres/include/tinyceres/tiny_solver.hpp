@@ -201,6 +201,9 @@ public:
 			return false;
 		}
 
+		MEOW_LOG("Residuals (before negation) are");
+		std::cout << residuals_ << std::endl;
+
 		residuals_ = -residuals_;
 
 		// On the first iteration, compute a diagonal (Jacobi) scaling
@@ -441,6 +444,7 @@ private:
 		jacobi_scaling_.resize(num_parameters);
 		lm_diagonal_.resize(num_parameters);
 		lm_step_.resize(num_parameters);
+		
 		residuals_.resize(num_residuals);
 		f_x_new_.resize(num_residuals);
 		jacobian_.resize(num_residuals, num_parameters);
